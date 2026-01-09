@@ -1,72 +1,106 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, ShieldAlert, BarChart3, Settings, FileText, X } from 'lucide-react';
+import { 
+  HomeIcon, 
+  UsersIcon, 
+  DocumentTextIcon,
+  FlagIcon,
+  ChartBarIcon,
+  CogIcon,
+  XMarkIcon
+} from '@heroicons/react/24/outline';
 
 interface SidebarProps {
   isOpen: boolean;
-  toggleSidebar: () => void;
+  onClose: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
-  const navItems = [
-    { name: 'Dashboard', path: '/', icon: <LayoutDashboard size={20} /> },
-    { name: 'Moderation Queue', path: '/moderation', icon: <ShieldAlert size={20} /> },
-    { name: 'User Management', path: '/users', icon: <Users size={20} /> },
-    { name: 'Content / Posts', path: '/posts', icon: <FileText size={20} /> },
-    { name: 'Analytics', path: '/analytics', icon: <BarChart3 size={20} /> },
-    { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },
-  ];
+const navigation = [
+  { name: 'Dashboard', href: '/admin/dashboard', icon: HomeIcon },
+  { name: 'Users', href: '/admin/users', icon: UsersIcon },
+  { name: 'Posts', href: '/admin/posts', icon: DocumentTextIcon },
+  { name: 'Moderation', href: '/admin/moderation', icon: FlagIcon },
+  { name: 'Analytics', href: '/admin/analytics', icon: ChartBarIcon },
+  { name: 'Settings', href: '/admin/settings', icon: CogIcon },
+];
 
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   return (
     <>
-      {/* Mobile Backdrop */}
-      <div 
-        className={`fixed inset-0 z-20 bg-gray-900 bg-opacity-50 transition-opacity lg:hidden ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-        onClick={toggleSidebar}
-      />
+      {/* Mobile sidebar backdrop */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-gray-600 bg-opacity-75 z-20 lg:hidden"
+          onClick={onClose}
+        />
+      )}
 
-      {/* Sidebar Container */}
-      <aside 
-        className={`fixed inset-y-0 left-0 z-30 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 lg:translate-x-0 lg:static lg:inset-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+      {/* Sidebar */}
+      <div
+        className={`fixed inset-y-0 left-0 z-30 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
       >
-        <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
-          <span className="text-xl font-bold text-blue-600">SiayaNakuru<span className="text-gray-800">Admin</span></span>
-          <button onClick={toggleSidebar} className="lg:hidden text-gray-500 hover:text-gray-700">
-            <X size={24} />
-          </button>
-        </div>
-
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={({ isActive }) =>
-                `flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-colors ${
-                  isActive 
-                    ? 'bg-blue-50 text-blue-700' 
-                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                }`
-              }
+        <div className="flex flex-col h-full">
+          {/* Logo */}
+          <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">A</span>
+                </div>
+              </div>
+              <span className="ml-3 text-xl font-semibold text-gray-900">
+                Admin Panel
+              </span>
+            </div>
+            
+            {/* Close button (mobile only) */}
+            <button
+              onClick={onClose}
+              className="lg:hidden text-gray-400 hover:text-gray-600"
             >
-              <span className="mr-3">{item.icon}</span>
-              {item.name}
-            </NavLink>
-          ))}
-        </nav>
+              <XMarkIcon className="h-6 w-6" />
+            </button>
+          </div>
 
-        <div className="p-4 border-t border-gray-200">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
-              A
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-700">Admin User</p>
-              <p className="text-xs text-gray-500">Super Admin</p>
-            </div>
+          {/* Navigation */}
+          <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
+            {navigation.map((item) => (
+              <NavLink
+                key={item.name}
+                to={item.href}
+                onClick={() => onClose()}
+                className={({ isActive }) =>
+                  `group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                    isActive
+                      ? 'bg-blue-50 text-blue-600'
+                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <item.icon
+                      className={`mr-3 h-5 w-5 flex-shrink-0 ${
+                        isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-500'
+                      }`}
+                    />
+                    {item.name}
+                  </>
+                )}
+              </NavLink>
+            ))}
+          </nav>
+
+          {/* Footer */}
+          <div className="flex-shrink-0 border-t border-gray-200 p-4">
+            <p className="text-xs text-gray-500 text-center">
+              © 2024 Party Flags App
+            </p>
           </div>
         </div>
-      </aside>
+      </div>
     </>
   );
 };

@@ -2,7 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import Login from './pages/auth/Login';
 import Dashboard from './pages/Dashboard';
 import ProtectedRoute from './components/auth/ProtectedRoute';
-import AdminLayout from './components/layout/AdminLayout';
+import AppLayout from './components/layout/AppLayout';
 
 const router = createBrowserRouter([
   {
@@ -14,7 +14,7 @@ const router = createBrowserRouter([
     element: <ProtectedRoute />,
     children: [
       {
-        element: <AdminLayout />,
+        element: <AppLayout />,
         children: [
           {
             path: 'dashboard',

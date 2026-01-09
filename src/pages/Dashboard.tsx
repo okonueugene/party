@@ -1,171 +1,105 @@
-import React from 'react';
-import StatsCard from '../components/dashboard/StatsCard';
-import { Users, AlertTriangle, FileText, Activity } from 'lucide-react';
-import { Bar, Line } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-} from 'chart.js';
-
-// Register ChartJS components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
+import PageMeta from "../components/common/PageMeta";
+import React, { useEffect, useState } from 'react';
+import dashboardService from '../api/dashboard';
+import type { DashboardData } from '../types/dashboard.types';
+import { RotatingLines as Spinner } from 'react-loader-spinner';
+import toast from 'react-hot-toast';
+import CommunityStats from "../components/dashboard/CommunityStats";
+import UserDemographics from "../components/dashboard/UserDemographics";
+import ModerationCard from "../components/dashboard/ModerationCard";
+import EngagementChart from "../components/dashboard/EngagementChart";
+import ModerationQueue from "../components/dashboard/ModerationQueue"; 
 
 const Dashboard: React.FC = () => {
-  // Mock Data conforming to specs (Users per ward, Engagement) 
-  const userGrowthData = {
-    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    datasets: [
-      {
-        label: 'New Registrations',
-        data: [12, 19, 8, 15, 22, 30, 45],
-        borderColor: 'rgb(59, 130, 246)',
-        backgroundColor: 'rgba(59, 130, 246, 0.5)',
-        tension: 0.3,
-      },
-    ],
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const response = await dashboardService.getOverview();
+      setData(response);
+    } catch (error) {
+      toast.error("Failed to sync dashboard data");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const flagsByReasonData = {
-    labels: ['Hate Speech', 'Misinfo', 'Spam', 'Harassment'],
-    datasets: [
-      {
-        label: 'Flagged Content',
-        data: [15, 8, 24, 5],
-        backgroundColor: [
-          'rgba(239, 68, 68, 0.7)',  // Red
-          'rgba(245, 158, 11, 0.7)', // Orange
-          'rgba(107, 114, 128, 0.7)', // Gray
-          'rgba(59, 130, 246, 0.7)', // Blue
-        ],
-      },
-    ],
-  };
+  useEffect(() => { loadData(); }, []);
 
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
-          <p className="text-gray-500 mt-1">Welcome back! Here's what's happening in Siaya & Nakuru.</p>
-        </div>
-        <div className="mt-4 md:mt-0">
-           {/* Action button placeholder */}
-           <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium">
-             Download Report
-           </button>
-        </div>
-      </div>
-
-      {/* 1. Key Metrics Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard 
-          title="Total Users" 
-          value="1,245" 
-          icon={<Users size={24} />} 
-          trend={{ value: 12, isPositive: true }}
-          color="blue"
-        />
-        <StatsCard 
-          title="Pending Flags" 
-          value="42" 
-          icon={<AlertTriangle size={24} />} 
-          trend={{ value: 5, isPositive: false }}
-          color="red"
-        />
-        <StatsCard 
-          title="Posts Today" 
-          value="189" 
-          icon={<FileText size={24} />} 
-          trend={{ value: 8, isPositive: true }}
-          color="green"
-        />
-        <StatsCard 
-          title="Engagement Rate" 
-          value="24%" 
-          icon={<Activity size={24} />} 
-          color="yellow"
-        />
-      </div>
-
-      {/* 2. Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Growth Chart */}
-        <div className="lg:col-span-2 bg-white p-5 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">User Growth & Activity</h3>
-          <div className="h-64">
-            <Line options={{ responsive: true, maintainAspectRatio: false }} data={userGrowthData} />
-          </div>
-        </div>
-
-        {/* Secondary Stats Chart */}
-        <div className="bg-white p-5 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">Flags by Reason</h3>
-          <div className="h-64">
-             <Bar 
-               options={{ 
-                 responsive: true, 
-                 maintainAspectRatio: false,
-                 indexAxis: 'y' as const // Horizontal Bar Chart
-               }} 
-               data={flagsByReasonData} 
-             />
-          </div>
-        </div>
-      </div>
-
-      {/* 3. Recent Activity List (Simplified Table) */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-bold text-gray-800">Recent Flagged Content</h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {[1, 2, 3].map((_, i) => (
-                <tr key={i}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                      Pending
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">Hate Speech</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Nakuru East</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2 mins ago</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="bg-gray-50 px-6 py-3 border-t border-gray-200">
-            <button className="text-sm text-blue-600 font-medium hover:text-blue-800">View All Queue &rarr;</button>
-        </div>
-      </div>
+  if (loading) return (
+    <div className="flex items-center justify-center h-screen w-full">
+      <Spinner height={40} width={40} color="#4F46E5" visible={true} strokeWidth={5} />
     </div>
   );
-};
+
+  if (!data) return <div className="p-10 text-center">No data available.</div>;
+
+  return (
+    <>
+      <PageMeta title="Community Admin Dashboard" description="Overview of metrics" />
+      
+      {/* Container normalized to TailAdmin standard padding and max-width */}
+      <div className="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
+        <div className="grid grid-cols-12 gap-4 md:gap-6 2xl:gap-7.5">
+          
+          {/* 1. KPI SECTION - Full Width */}
+          <div className="col-span-12">
+            <CommunityStats metrics={data.metrics} />
+          </div>
+
+          {/* 2. MAIN ROW: Map & Moderation (Balanced Heights) */}
+          <div className="col-span-12 xl:col-span-8 flex flex-col">
+            {/* Height of this container should drive the row height */}
+            <UserDemographics users={data.recent_activity.recent_users} />
+          </div>
+
+          <div className="col-span-12 xl:col-span-4 flex flex-col">
+            {/* Removed the manual max-h and overflow. 
+                Using flex-grow ensures this card stretches to match the Map card */}
+            <ModerationCard 
+              metrics={data.metrics.moderation} 
+              recentFlags={data.recent_activity.recent_flags} 
+            />
+          </div>
+          
+          {/* 3. TRENDS ROW: Engagement & Health */}
+          <div className="col-span-12 xl:col-span-7 flex flex-col">
+            <EngagementChart engagement={data.metrics.engagement} />
+          </div>
+
+          <div className="col-span-12 xl:col-span-5 flex flex-col gap-4 md:gap-6">
+            {/* Re-using the standard TailAdmin wrapper logic for the health card */}
+            <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] sm:p-6 h-full">
+               <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90 mb-4">
+                 Community Health
+               </h3>
+               <div className="space-y-4">
+                 <div className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700">
+                    <span className="text-gray-600 dark:text-gray-400 font-medium">Verified Users</span>
+                    <span className="font-bold text-success text-lg">{data.metrics.users.verified}</span>
+                 </div>
+                 <div className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700">
+                    <span className="text-gray-600 dark:text-gray-400 font-medium">Daily Engagement Rate</span>
+                    {/* Calculation example */}
+                    <span className="font-bold text-gray-800 dark:text-white text-lg">
+                      {((data.metrics.engagement.today_likes / data.metrics.users.total) * 100).toFixed(1)}%
+                    </span>
+                 </div>
+               </div>
+            </div>
+          </div>
+
+          {/* 4. TABLE SECTION - Full Width Footer */}
+          <div className="col-span-12 mt-2">
+            <ModerationQueue flags={data.recent_activity.recent_flags} />
+          </div>
+
+        </div>
+      </div>
+    </>
+  );
+}
 
 export default Dashboard;
